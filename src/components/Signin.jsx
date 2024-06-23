@@ -23,7 +23,7 @@ export default function Signin() {
   }, []);
 
   const handleOtplessUser = (otplessUser) => {
-    fetch('http://localhost:3000/server/auth/otpless', {
+    fetch('https://fincelerate-front-1.onrender.com/server/auth/otpless', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
