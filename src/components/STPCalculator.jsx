@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import 'chart.js/auto';
 
-export default function StpCalculator() {
+const inflationRate = 6 / 100;
+
+export default function STPCalculator() {
   const [sourceInvestment, setSourceInvestment] = useState(100000);
   const [sourceReturns, setSourceReturns] = useState(8);
   const [transferAmount, setTransferAmount] = useState(1000);
@@ -24,28 +26,33 @@ export default function StpCalculator() {
       let remainingSource = sourceInvestment;
       let accumulatedTarget = 0;
       let growthData = [];
+      let monthlyWithdrawals = targetPeriod * frequency;
 
-      for (let i = 0; i < targetPeriod; i++) {
-        if (remainingSource < transferAmount) {
-          transferAmount = remainingSource;
-        }
+      for (let i = 1; i <= monthlyWithdrawals; i++) {
+        let actualTransferAmount = Math.min(transferAmount, remainingSource);
         
         // Calculate gains in source fund
         let sourceGainsThisMonth = remainingSource * sourceMonthlyRate;
-        remainingSource += sourceGainsThisMonth - transferAmount;
+        remainingSource += sourceGainsThisMonth - actualTransferAmount;
 
         // Calculate gains in target fund
-        accumulatedTarget += transferAmount;
+        accumulatedTarget += actualTransferAmount;
         let targetGainsThisMonth = accumulatedTarget * targetMonthlyRate;
         accumulatedTarget += targetGainsThisMonth;
 
         growthData.push({
-          month: i + 1,
+          month: i,
           remainingSource: Math.max(remainingSource, 0),
           accumulatedTarget: accumulatedTarget,
         });
+
+        if (remainingSource <= 0) {
+          monthlyWithdrawals = i;
+          break;
+        }
       }
 
+      let expectedGainsValue = accumulatedTarget - sourceInvestment + sourceGains;
       setSourceGains(sourceInvestment * (1 + sourceMonthlyRate) ** targetPeriod - sourceInvestment);
       setTargetGains(accumulatedTarget - transferAmount * targetPeriod);
       setFinalValue(remainingSource + accumulatedTarget);
@@ -87,7 +94,7 @@ export default function StpCalculator() {
       y: {
         title: {
           display: true,
-          text: 'Value (₹)',
+          text: 'Remaining Investment (₹)',
         },
         beginAtZero: true,
       },
